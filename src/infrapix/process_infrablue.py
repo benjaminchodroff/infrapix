@@ -62,7 +62,8 @@ def ndvi(img,
          show_colorbar  = True,
          colorbar_labelsize = 6,
          show_histogram = False,
-         dpi = 600.0 #needs to be floating point
+         dpi = 600.0, #needs to be floating point
+         colormap = plt.cm.spectral #alternate: plt.cm.gist_gray
         ):
     if isinstance(img,str): #treat as a filename
         img = Image.open(img)
@@ -74,7 +75,10 @@ def ndvi(img,
     arrB = numpy.asarray(imgB).astype('float64')
     num   = (arrR - arrB)
     denom = (arrR + arrB)
-    arr_ndvi = num/denom
+    with numpy.errstate(divide='ignore', invalid='ignore'):
+        arr_ndvi = numpy.true_divide(num,denom)
+        arr_ndvi[arr_ndvi == numpy.inf] = 0
+        arr_ndvi = numpy.nan_to_num(arr_ndvi)
 
     #FIXME something is horribly wrong?
     if arr_ndvi.max() < 0.0:
@@ -127,7 +131,7 @@ def ndvi(img,
     ax.patch.set_alpha(0.0)
 
     axes_img = ax.imshow(arr_ndvi,
-                         cmap=plt.cm.spectral, 
+                         cmap=colormap, 
                          vmin = vmin,
                          vmax = vmax,
                          aspect = 'equal',
